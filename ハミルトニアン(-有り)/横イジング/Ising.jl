@@ -146,7 +146,11 @@ H_val, H_vec = eigen(H)
 #ρ = exp(-1*β*H)/tr(exp(-β*H)) 
 A = make_pauli(1,Nq,"Z")
 #B = make_pauli(5,Nq,"X")
+β_list = [0,1,3,5]
+B_list = [2,3,4,5,6,7,8,9,10]
 
+#-------------------------------------------------------------------------------------------------------------------
+#普通に実行する時
 TimeArray = zeros(Float64,N,N)
 θ = zeros(Float64,N,N)
 ϕ = zeros(Float64,N,N)
@@ -178,8 +182,7 @@ for i in 1:1:N
 end
 close(out)
 
-β_list = [0,1,3,5]
-B_list = [2,3,4,5,6,7,8,9,10]
+
 function main()
     for β in β_list
         ρ = exp(-1*β*H)/tr(exp(-β*H))
@@ -224,8 +227,9 @@ function main()
 end
 
 main()
-
-ADD = 10 #増やすRUの数
+#-------------------------------------------------------------------------------------------------------------------
+#RUを追加する時
+ADD = 20 #増やすRUの数
 T_Old = 130 #前回のTimeMax
 TimeMaxArray = [
 104.20421349396803
@@ -303,7 +307,7 @@ function main_Add()
                     U = chose_unitary(unitary_pool,TimeAddArray[i,:],t)
                     OTOC = tr(ρ*U'*B'*U*A'*U'*B*U*A)
                     #println(out,OTOC)
-                    #println(OTOC)
+                    println(OTOC)
                     result[i,k] = OTOC
                 end
                 
@@ -327,10 +331,8 @@ end
 
 main_Add()
 
-#testdayo-----nnnn
 
-
-
+#=
 for i in 1:1:10
         
     S = zeros(Float64,N)
@@ -375,3 +377,4 @@ for i in 1:1:10
         end
     end
 end
+=#
