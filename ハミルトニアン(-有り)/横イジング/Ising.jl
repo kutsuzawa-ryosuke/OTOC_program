@@ -309,6 +309,7 @@ function main_Add()
                     #println(out,OTOC)
                     println(OTOC)
                     result[i,k] = OTOC
+                    k = k+1
                 end
                 
                 for j in 1:1:T_New-T_Old
