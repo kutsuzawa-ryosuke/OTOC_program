@@ -1,5 +1,10 @@
 using LinearAlgebra, Random, RandomMatrices
-using Plots
+#using Plots
+
+Igate = Matrix{ComplexF64}(I,2,2)                  #1-qubitの単位行列
+Xgate = [0.0+0.0im 1.0+0.0im;1.0+0.0im 0.0+0.0im]  #1-qubitのパウリX行列
+Ygate = [0.0+0.0im 0.0-1.0im;0.0+1.0im 0.0+0.0im]  #1-qubitのパウリY行列
+Zgate = [1.0+0.0im 0.0+0.0im;0.0+0.0im -1.0+0.0im] #1-qubitのパウリY行列
 
 function RandomUnitaryMatrix(Nq::Int,Dim::Int)
     I_gate = Matrix{ComplexF64}(I,2^(Nq-1),2^(Nq-1))
@@ -65,7 +70,7 @@ end
 function make_unitary_pool(Nq::Int,S)
     unitary_pool = zeros(ComplexF64,2^Nq,2^Nq,N)
 
-    for i in 1:N
+    for i in 1:length(S)
         hamiltonian_unitary = H_vec*diagm(exp.(-1.0im*H_val*S[i]))*H_vec'
         #hamiltonian_unitary = exp(-1.0im*H*S[i])
         if i == 1
@@ -82,7 +87,7 @@ function chose_unitary(unitary_pool,S,t)
     s = 0
     i = 1
     unitary = zeros(ComplexF64,(2^Nq,2^Nq))
-    while i <= N
+    while i <= length(S)
         if t < S[1]
             unitary = H_vec*diagm(exp.(-1.0im*H_val*t))*H_vec'
             return unitary
@@ -133,11 +138,6 @@ function make_pauli(index::Int, Nq::Int, pauli_name)
     return pauli
 end
 
-Igate = Matrix{ComplexF64}(I,2,2)                  #1-qubitの単位行列
-Xgate = [0.0+0.0im 1.0+0.0im;1.0+0.0im 0.0+0.0im]  #1-qubitのパウリX行列
-Ygate = [0.0+0.0im 0.0-1.0im;0.0+1.0im 0.0+0.0im]  #1-qubitのパウリY行列
-Zgate = [1.0+0.0im 0.0+0.0im;0.0+0.0im -1.0+0.0im] #1-qubitのパウリY行列
-
 Nq = 10 #qubit数
 N = 20  #乱数取る回数
 #β = 0  #最大10くらい
@@ -146,20 +146,11 @@ H_val, H_vec = eigen(H)
 #ρ = exp(-1*β*H)/tr(exp(-β*H)) 
 A = make_pauli(1,Nq,"Z")
 #B = make_pauli(5,Nq,"X")
-#unitary_pool = make_unitary_pool(Nq)
+β_list = [0,1,3,5]
+B_list = [2,3,4,5,6,7,8,9,10]
 
-#=
-out = open("Ising_β=$β(1,2).txt","a")
-println(out,S)
-@time for t in 0:1:10
-    U(t) = chose_unitary(t)
-    OTOC(t) = tr(ρ*U(t)'*B'*U(t)*A'*U(t)'*B*U(t)*A)
-    #println(t)
-    println(out,OTOC(t))
-end
-println(out,"")
-close(out)
-=#
+#-------------------------------------------------------------------------------------------
+#普通に実行する時
 TimeArray = zeros(Float64,N,N)
 for i in 1:1:N
     for j in 1:N
@@ -176,14 +167,16 @@ T = Int(round(TimeMax) + 1)
 TimeArray[:,:]
 size(TimeArray)
 out = open("time.txt","a")
+println(out,TimeArray)
+println(out,"")
 for i in 1:1:N
     println(out,TimeArray[i,:])
-    println(out,"")
+end
+println(out,"TimeMax")
+for i in 1:1:N
+    println(out,maximum(TimeArray[i,:]))
 end
 close(out)
-
-β_list = [0,1,3,5]
-B_list = [2,3,4,5,6,7,8,9,10]
 
 function main()
     for β in β_list
@@ -196,7 +189,7 @@ function main()
             result = zeros(ComplexF64,N,T+1)
             result_ave = zeros(ComplexF64,T+1)
 
-            for i in 1:1:N
+            for i in 1:1:N #平均を取る回数
                 println(TimeArray[i,:])
                 println(out,TimeArray[i,:])
                 unitary_pool = make_unitary_pool(Nq,TimeArray[i,:])
@@ -230,10 +223,108 @@ function main()
 end
 
 main()
+#-------------------------------------------------------------------------------------------------------------------
+#RUを追加する時
+ADD = 10 #増やすRUの数
+T_Old = 120 #前回のTimeMax
+TimeMaxArray = [
+90.75983339003538
+80.29388343940214
+92.82037216846993
+86.43967451581229
+96.19759379763019
+94.47052753880162
+93.41935705051624
+106.00603776249076
+98.08854350378054
+94.86913934276203
+87.10331300046053
+107.63802710982421
+102.09872979751607
+101.06617405814295
+95.71414128882643
+104.93657231735148
+102.80874474024715
+84.24460179738186
+83.1533822965697
+118.90930969918482]
 
+#RUを追加する時のRUが入る時間
+TimeAddArray = zeros(Float64,N,ADD)
+for i in 1:1:N
+    for j in 1:ADD
+        s = rand()*10
+        if j == 1
+            TimeAddArray[i,j] = TimeMaxArray[i]+s
+        else
+            TimeAddArray[i,j] = TimeAddArray[i,j-1]+s
+        end
+        
+    end
+end
+TimeAddArray
+TimeAddMax = maximum(TimeAddArray)
+T_New = Int(round(TimeAddMax) + 1)
+size(TimeAddArray)
+out = open("time_Add.txt","a")
+print(out,TimeAddArray)
+println(out,"")
+for i in 1:1:N
+    println(out,TimeAddArray[i,:])
+end
+println(out,"")
+for i in 1:1:N
+    println(out,maximum(TimeAddArray[i,:]))
+end
+close(out)
 
+function main_Add()
+    for β in β_list
+        ρ = exp(-1*β*H)/tr(exp(-β*H))
+        for B_index in B_list
+            out = open("Heisenberg_β=$β(1,$B_index)_Add.txt","a")
+            
+            B = make_pauli(B_index,Nq,"X")
+            println("β=",β,',',"A=1",',',"B=",B_index)
+            result = zeros(ComplexF64,N,T_New-T_Old)
+            result_ave = zeros(ComplexF64,T_New-T_Old)
 
+            for i in 1:1:N #平均を取る回数
+                println(TimeAddArray[i,:])
+                println(out,TimeAddArray[i,:])
+                unitary_pool = make_unitary_pool(Nq,TimeAddArray[i,:])
+                k = 1
+                for t in T_Old+1:1:T_New
+                    println(t)
+                    U = chose_unitary(unitary_pool,TimeAddArray[i,:],t)
+                    OTOC = tr(ρ*U'*B'*U*A'*U'*B*U*A)
+                    #println(out,OTOC)
+                    println(OTOC)
+                    result[i,k] = OTOC
+                    k = k+1
+                end
+                
+                for j in 1:1:T_New-T_Old
+                    println(out,result[i,j])
+                    result_ave[j] += result[i,j]
+                end
+                println(out,"")
+            end
+            println(out,"average")
+            result_ave = result_ave ./ N
+            for j in 1:1:T_New-T_Old
+                println(out,result_ave[j])
+            end
+            println(out,"")
+            println(out, "最後にRUが入ったタイミング: ",TimeAddMax)
+            close(out)
+        end
+    end
+end
 
+main_Add()
+
+#=
 for i in 1:1:5
         
     S = zeros(Float64,N)
@@ -272,3 +363,4 @@ for i in 1:1:5
         end
     end
 end
+=#
