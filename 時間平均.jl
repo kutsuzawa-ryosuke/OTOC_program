@@ -1,5 +1,4 @@
-F = [
-1
+F = [1
 -0.50009787
 0.742520793
 0.895026506
@@ -131,15 +130,13 @@ F = [
 0.117666097
 0.144444794]
 
-K = 5
-L = length(F)-K+1
-
-
+K_list = [5,10,15,20,25,30]
+#L = length(F)-K+1
 
 #f(1), f(2), f(3), f(4), f(5), f(6), f(7), f(8), f(9),
 #g(i)={ f(i)+f(i+1)+....+f(i+k-1) }/k
 
-function G(i)
+function G(i,K)
     g = 0
     for k in 0:1:K-1
         g = g + F[i+k]
@@ -148,6 +145,17 @@ function G(i)
     return g
 end
 
-for i in 1:1:L
-    println(G(i))
+function main()
+    for K in K_list
+        println("K=",K,"--------------------------------")
+        L = length(F)-K+1
+        for i in 1:1:L
+            println(G(i,K))
+        end
+        println(" ")
+    end
 end
+
+main()
+
+
