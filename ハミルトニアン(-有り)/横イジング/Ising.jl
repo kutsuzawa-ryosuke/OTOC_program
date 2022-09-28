@@ -114,9 +114,10 @@ function make_pauli(index::Int, Nq::Int, pauli_name)
             if index == 1 #1st qubitがXかYのとき
                 if pauli_name == "X"
                     pauli = Xgate
+                elseif pauli_name == "Y"
+                    pauli = Ygate
                 elseif pauli_name == "Z"
                     pauli = Zgate
-                else
                     println("ERROR: undefined!")
                     return False
                 end
@@ -127,6 +128,8 @@ function make_pauli(index::Int, Nq::Int, pauli_name)
             if i == index #XかYを代入するタイミングのとき
                 if pauli_name == "X"
                     pauli = kron(pauli, Xgate)
+                elseif pauli_name == "Y"
+                    pauli = kron(pauli, Ygate)
                 elseif pauli_name == "Z"
                     pauli = kron(pauli, Zgate)
                 end
