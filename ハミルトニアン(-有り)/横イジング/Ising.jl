@@ -67,6 +67,40 @@ function make_hamiltonian(Nq::Int)
     return hamiltonian
 end
 
+function make_pauli(index::Int, Nq::Int, pauli_name)
+    pauli = zeros(ComplexF64,(2^Nq,2^Nq))
+    for i in 1:Nq
+        if i == 1 #一番最初のループはおおもとになる行列の宣言をする(pauliを作る)
+            if index == 1 #1st qubitがXかYのとき
+                if pauli_name == "X"
+                    pauli = Xgate
+                elseif pauli_name == "Y"
+                    pauli = Ygate
+                elseif pauli_name == "Z"
+                    pauli = Zgate
+                    println("ERROR: undefined!")
+                    return False
+                end
+            else
+                pauli = Igate
+            end
+        else #2ループ目以降は変数pauliがあるはずなので、pauli \tensor (X or Z or I)を計算してpauliを上書き代入
+            if i == index #XかYを代入するタイミングのとき
+                if pauli_name == "X"
+                    pauli = kron(pauli, Xgate)
+                elseif pauli_name == "Y"
+                    pauli = kron(pauli, Ygate)
+                elseif pauli_name == "Z"
+                    pauli = kron(pauli, Zgate)
+                end
+            else
+                pauli = kron(pauli, Igate)
+            end
+        end
+    end
+    return pauli
+end
+
 function make_unitary_pool(Nq::Int,S,θ,ϕ)
     unitary_pool = zeros(ComplexF64,2^Nq,2^Nq,N)
 
@@ -107,40 +141,8 @@ function chose_unitary(unitary_pool,S,t)
     return unitary
 end
 
-function make_pauli(index::Int, Nq::Int, pauli_name)
-    pauli = zeros(ComplexF64,(2^Nq,2^Nq))
-    for i in 1:Nq
-        if i == 1 #一番最初のループはおおもとになる行列の宣言をする(pauliを作る)
-            if index == 1 #1st qubitがXかYのとき
-                if pauli_name == "X"
-                    pauli = Xgate
-                elseif pauli_name == "Y"
-                    pauli = Ygate
-                elseif pauli_name == "Z"
-                    pauli = Zgate
-                    println("ERROR: undefined!")
-                    return False
-                end
-            else
-                pauli = Igate
-            end
-        else #2ループ目以降は変数pauliがあるはずなので、pauli \tensor (X or Z or I)を計算してpauliを上書き代入
-            if i == index #XかYを代入するタイミングのとき
-                if pauli_name == "X"
-                    pauli = kron(pauli, Xgate)
-                elseif pauli_name == "Y"
-                    pauli = kron(pauli, Ygate)
-                elseif pauli_name == "Z"
-                    pauli = kron(pauli, Zgate)
-                end
-            else
-                pauli = kron(pauli, Igate)
-            end
-        end
-    end
-    return pauli
-end
 
+#変数の定義
 Nq = 10 #qubit数
 N = 20  #乱数取る回数
 #β = 0  #最大10くらい
