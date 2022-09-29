@@ -1,5 +1,7 @@
 using LinearAlgebra, Random, RandomMatrices
-using Plots
+using JLD2
+using FileIO
+#using Plots
 
 Igate = Matrix{ComplexF64}(I,2,2)                  #1-qubitの単位行列
 Xgate = [0.0+0.0im 1.0+0.0im;1.0+0.0im 0.0+0.0im]  #1-qubitのパウリX行列
@@ -78,6 +80,7 @@ function make_pauli(index::Int, Nq::Int, pauli_name)
                     pauli = Ygate
                 elseif pauli_name == "Z"
                     pauli = Zgate
+                else
                     println("ERROR: undefined!")
                     return False
                 end
@@ -101,7 +104,7 @@ function make_pauli(index::Int, Nq::Int, pauli_name)
     return pauli
 end
 
-function make_unitary_pool(Nq::Int,S,θ,ϕ)
+function make_unitary_pool(Nq::Int,S,θ,ϕ,N)
     unitary_pool = zeros(ComplexF64,2^Nq,2^Nq,N)
 
     for i in 1:length(S)
@@ -145,6 +148,7 @@ end
 #変数の定義
 Nq = 10 #qubit数
 N = 20  #乱数取る回数
+Ave = 2 #平均を取る回数
 #β = 0  #最大10くらい
 H = make_hamiltonian(Nq)
 H_val, H_vec = eigen(H) 
@@ -156,10 +160,10 @@ B_list = [2,3,4,5,6,7,8,9,10]
 
 #-------------------------------------------------------------------------------------------------------------------
 #普通に実行する時
-TimeArray = zeros(Float64,N,N)
-θ = zeros(Float64,N,N)
-ϕ = zeros(Float64,N,N)
-for i in 1:1:N
+TimeArray = zeros(Float64,Ave,N)
+θ = zeros(Float64,Ave,N)
+ϕ = zeros(Float64,Ave,N)
+for i in 1:1:Ave
     for j in 1:N
         s = rand()*10
         θ[i,j] = rand()*2*pi
@@ -178,14 +182,23 @@ size(TimeArray)
 out = open("time.txt","a")
 println(out,TimeArray)
 println(out,"")
-for i in 1:1:N
+for i in 1:1:Ave
     println(out,TimeArray[i,:])
 end
 println(out,"TimeMax")
-for i in 1:1:N
+for i in 1:1:Ave
     println(out,maximum(TimeArray[i,:]))
 end
 close(out)
+
+#乱数が入るタイミングなどのdataを保存
+filename = "ハミルトニアン(-有り)/横イジング/data1.jld2"
+jldopen(filename,"w") do file
+    file["N"] = N
+    file["Time"] = TimeArray
+    file["θ"] = θ
+    file["ϕ"] = ϕ
+end
 
 
 function main()
@@ -196,13 +209,13 @@ function main()
             
             B = make_pauli(B_index,Nq,"X")
             println("β=",β,',',"A=1",',',"B=",B_index)
-            result = zeros(ComplexF64,N,T+1)
+            result = zeros(ComplexF64,Ave,T+1)
             result_ave = zeros(ComplexF64,T+1)
 
-            for i in 1:1:N
+            for i in 1:1:Ave
                 println(TimeArray[i,:])
                 println(out,TimeArray[i,:])
-                unitary_pool = make_unitary_pool(Nq,TimeArray[i,:],θ[i,:],ϕ[i,:])
+                unitary_pool = make_unitary_pool(Nq,TimeArray[i,:],θ[i,:],ϕ[i,:],N)
                 
                 for t in 0:1:T
                     println(t)
@@ -220,7 +233,7 @@ function main()
                 println(out,"")
             end
             println(out,"average")
-            result_ave = result_ave ./ N
+            result_ave = result_ave ./ Ave
             for j in 1:1:T+1
                 println(out,result_ave[j])
             end
@@ -234,59 +247,46 @@ end
 main()
 #-------------------------------------------------------------------------------------------------------------------
 #RUを追加する時
-ADD = 20 #増やすRUの数
-T_Old = 130 #前回のTimeMax
-TimeMaxArray = [
-104.20421349396803
-121.20941621467182
-81.73271877431576
-87.14351189740607
-81.97278070863186
-112.05697968085103
-98.61386649231636
-101.3945583148395
-98.44048434107557
-115.02085150358047
-111.1777661947926
-126.32972566920571
-129.28844631327559
-121.67654505822183
-64.45071408281214
-86.33171855741386
-96.82166397217668
-98.54475467934446
-93.69112821534962
-91.29010376282142
-]
-#RUを追加する時のRUが入る時間
-TimeAddArray = zeros(Float64,N,ADD)
-θ = zeros(Float64,N,ADD)
-ϕ = zeros(Float64,N,ADD)
-for i in 1:1:N
-    for j in 1:ADD
+#dataをロード,filenameに注意
+filename = "ハミルトニアン(-有り)/横イジング/data1.jld2"
+data = load(filename)
+jldopen(filename,"r") do file
+    N = file["N"]
+    TimeArray = file["Time"]
+    θ = file["θ"] 
+    ϕ = file["ϕ"]
+end
+N_ADD = N + 10 #増やすRUの数
+T_Old = 100 #前回のTimeMax
+
+TimeAddArray = zeros(Float64,Ave,N_ADD)
+θ_Add = zeros(Float64,Ave,N_ADD)
+ϕ_Add = zeros(Float64,Ave,N_ADD)
+for i in 1:1:Ave
+    for j in 1:N
+        TimeAddArray[i,j] = TimeArray[i,j]
+        θ_Add[i,j] = θ[i,j]
+        ϕ_Add[i,j] = ϕ[i,j]
+    end
+    for j in N+1:N_ADD
         s = rand()*10
-        θ[i,j] = rand()*2*pi
-        ϕ[i,j] = rand()*2*pi
-        if j == 1
-            TimeAddArray[i,j] = TimeMaxArray[i]+s
-        else
-            TimeAddArray[i,j] = TimeAddArray[i,j-1]+s
-        end
-        
+        TimeAddArray[i,j] = TimeAddArray[i,j-1]+s
+        θ_Add[i,j] = rand()*2*pi
+        ϕ_Add[i,j] = rand()*2*pi
     end
 end
-TimeAddArray
+
 TimeAddMax = maximum(TimeAddArray)
 T_New = Int(round(TimeAddMax) + 1)
 size(TimeAddArray)
 out = open("time_Add.txt","a")
 print(out,TimeAddArray)
 println(out,"")
-for i in 1:1:N
+for i in 1:1:Ave
     println(out,TimeAddArray[i,:])
 end
 println(out,"")
-for i in 1:1:N
+for i in 1:1:Ave
     println(out,maximum(TimeAddArray[i,:]))
 end
 close(out)
@@ -299,13 +299,13 @@ function main_Add()
             
             B = make_pauli(B_index,Nq,"X")
             println("β=",β,',',"A=1",',',"B=",B_index)
-            result = zeros(ComplexF64,N,T_New-T_Old)
+            result = zeros(ComplexF64,Ave,T_New-T_Old)
             result_ave = zeros(ComplexF64,T_New-T_Old)
 
-            for i in 1:1:N
+            for i in 1:1:Ave
                 println(TimeAddArray[i,:])
                 println(out,TimeAddArray[i,:])
-                unitary_pool = make_unitary_pool(Nq,TimeAddArray[i,:],θ[i,:],ϕ[i,:])
+                unitary_pool = make_unitary_pool(Nq,TimeAddArray[i,:],θ_Add[i,:],ϕ_Add[i,:],N_ADD)
                 k = 1
                 for t in T_Old+1:1:T_New
                     println(t)
@@ -324,7 +324,7 @@ function main_Add()
                 println(out,"")
             end
             println(out,"average")
-            result_ave = result_ave ./ N
+            result_ave = result_ave ./ Ave
             for j in 1:1:T_New-T_Old
                 println(out,result_ave[j])
             end
@@ -337,6 +337,13 @@ end
 
 main_Add()
 
+filename2 = "ハミルトニアン(-有り)/横イジング/data2.jld2"
+jldopen(filename2,"w") do file
+    file["N"] = N_ADD
+    file["Time"] = TimeAddArray
+    file["θ"] = θ_Add
+    file["ϕ"] = ϕ_Add
+end
 
 #=
 for i in 1:1:10
