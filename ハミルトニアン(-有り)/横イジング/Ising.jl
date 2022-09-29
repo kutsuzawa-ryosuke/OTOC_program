@@ -147,8 +147,8 @@ end
 
 #変数の定義
 Nq = 10 #qubit数
-N = 20  #乱数取る回数
-Ave = 2 #平均を取る回数
+N = 30  #乱数取る回数
+Ave = 10 #平均を取る回数
 #β = 0  #最大10くらい
 H = make_hamiltonian(Nq)
 H_val, H_vec = eigen(H) 
@@ -222,7 +222,7 @@ function main()
                     U = chose_unitary(unitary_pool,TimeArray[i,:],t)
                     OTOC = tr(ρ*U'*B'*U*A'*U'*B*U*A)
                     #println(out,OTOC)
-                    #println(OTOC)
+                    println(OTOC)
                     result[i,t+1] = OTOC
                 end
                 
