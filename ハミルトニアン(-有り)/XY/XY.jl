@@ -171,11 +171,11 @@ size(TimeArray)
 out = open("time.txt","a")
 println(out,TimeArray)
 println(out,"")
-for i in 1:1:N
+for i in 1:1:Ave
     println(out,TimeArray[i,:])
 end
 println(out,"TimeMax")
-for i in 1:1:N
+for i in 1:1:Ave
     println(out,maximum(TimeArray[i,:]))
 end
 close(out)
