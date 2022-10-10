@@ -147,7 +147,7 @@ end
 
 #変数の定義
 Nq = 10 #qubit数
-N = 30  #乱数取る回数
+N = 30  #RU取る回数
 Ave = 10 #平均を取る回数
 #β = 0  #最大10くらい
 H = make_hamiltonian(Nq)
