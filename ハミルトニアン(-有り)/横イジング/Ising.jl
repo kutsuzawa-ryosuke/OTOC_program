@@ -153,10 +153,10 @@ Ave = 10 #平均を取る回数
 H = make_hamiltonian(Nq)
 H_val, H_vec = eigen(H) 
 #ρ = exp(-1*β*H)/tr(exp(-β*H)) 
-A = make_pauli(1,Nq,"Z")
+A = make_pauli(3,Nq,"Z")
 #B = make_pauli(5,Nq,"X")
 β_list = [0,1,3,5]
-B_list = [2,3,4,5,6,7,8,9,10]
+B_list = [1,2,4,5,6,7,8,9,10]
 
 #-------------------------------------------------------------------------------------------------------------------
 #普通に実行する時
@@ -205,10 +205,10 @@ function main()
     for β in β_list
         ρ = exp(-1*β*H)/tr(exp(-β*H))
         for B_index in B_list
-            out = open("Ising_β=$β(1,$B_index).txt","a")
+            out = open("ハミルトニアン(-有り)/横イジング/パウリ(Z,X)/計算結果/Ising_β=$β(3,$B_index).txt","a")
             
             B = make_pauli(B_index,Nq,"X")
-            println("β=",β,',',"A=1",',',"B=",B_index)
+            println("β=",β,',',"A=3",',',"B=",B_index)
             result = zeros(ComplexF64,Ave,T+1)
             result_ave = zeros(ComplexF64,T+1)
 
@@ -250,12 +250,11 @@ main()
 #dataをロード,filenameに注意
 filename = "ハミルトニアン(-有り)/横イジング/data1.jld2"
 data = load(filename)
-jldopen(filename,"r") do file
-    N = file["N"]
-    TimeArray = file["Time"]
-    θ = file["θ"] 
-    ϕ = file["ϕ"]
-end
+N = data["N"]
+TimeArray = data["Time"]
+θ = data["θ"] 
+ϕ = data["ϕ"]
+
 N_ADD = N + 10 #増やすRUの数
 T_Old = 100 #前回のTimeMax
 
