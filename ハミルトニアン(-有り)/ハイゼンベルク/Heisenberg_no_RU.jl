@@ -114,15 +114,16 @@ for t in 0:1:5
 end
 close(out)
 =#
-A = make_pauli(1,Nq,"Z")
+A = make_pauli(3,Nq,"Z")
+B_list = [1,2,4,5,6,7,8,9,10]
 β_list = [0,1,3,5]
 for β in β_list
     ρ = exp(-1*β*H)/tr(exp(-β*H))
-    for B_index in 2:1:10
-        out = open("Heisenberg_no_RU.txt","a")
+    for B_index in B_list
+        out = open("ハミルトニアン(-有り)/ハイゼンベルク/パウリ(Z,X)/計算結果/Heisenberg_no_RU2.txt","a")
         B = make_pauli(B_index,Nq,"X")
-        println("β=",β,',',"A=1",',',"B=",B_index)
-        println(out,"β=",β,',',"A=1",',',"B=",B_index)
+        println("β=",β,',',"A=3",',',"B=",B_index)
+        println(out,"β=",β,',',"A=3",',',"B=",B_index)
         for t in 0:1:200
             U = unitary(t)
             OTOC = tr(ρ*U'*B'*U*A'*U'*B*U*A)
