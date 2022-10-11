@@ -197,7 +197,7 @@ function main()
     for β in β_list
         ρ = exp(-1*β*H)/tr(exp(-β*H))
         for B_index in B_list
-            out = open("ハミルトニアン(-有り)/ハイゼンベルク/パウリ(Z,X)/Heisenberg_β=$β(3,$B_index).txt","a")
+            out = open("ハミルトニアン(-有り)/ハイゼンベルク/パウリ(Z,X)/計算結果/Heisenberg_β=$β(3,$B_index).txt","a")
             
             B = make_pauli(B_index,Nq,"X")
             println("β=",β,',',"A=3",',',"B=",B_index)
