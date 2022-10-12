@@ -170,21 +170,8 @@ F = [1
 ]
 β = 0
 
-#h(i)=max {f(i+k) | k \in {0,1,2,3,4,....データの最後} }
-function main2()
-    out = open("ハミルトニアン(-有り)/横イジング/パウリ(Z,X)/最大平均-RU有り/(1,6)β=$β.txt","a")
-    for i in 1:1:length(F)
-        println(maximum(F))
-        println(out,maximum(F))
-        F[i] = 0
-    end
-    close(out)
-end
-main2()
-
 K_list = [5,10,15,20,25,30]
 #L = length(F)-K+1
-
 #f(1), f(2), f(3), f(4), f(5), f(6), f(7), f(8), f(9),
 #g(i)={ f(i)+f(i+1)+....+f(i+k-1) }/k
 
@@ -210,9 +197,16 @@ function main1()
         close(out)
     end
 end
-
-
 main1()
 
-
-F
+#h(i)=max {f(i+k) | k \in {0,1,2,3,4,....データの最後} }
+function main2()
+    out = open("ハミルトニアン(-有り)/横イジング/パウリ(Z,X)/最大平均-RU有り/(1,6)β=$β.txt","a")
+    for i in 1:1:length(F)
+        println(maximum(F))
+        println(out,maximum(F))
+        F[i] = 0
+    end
+    close(out)
+end
+main2()
