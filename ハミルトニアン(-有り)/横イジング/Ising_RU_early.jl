@@ -165,7 +165,7 @@ TimeArray = zeros(Float64,Ave,N)
 ϕ = zeros(Float64,Ave,N)
 for i in 1:1:Ave
     for j in 1:N
-        s = rand()*10
+        s = rand()/10
         θ[i,j] = rand()*2*pi
         ϕ[i,j] = rand()*2*pi
         if j == 1
@@ -176,7 +176,7 @@ for i in 1:1:Ave
     end
 end
 TimeMax = maximum(TimeArray)
-T = Int(round(TimeMax) + 1)
+T = 50#Int(round(TimeMax) + 1)
 TimeArray[:,:]
 size(TimeArray)
 out = open("ハミルトニアン(-有り)/横イジング/time_RU_early.txt","a")
