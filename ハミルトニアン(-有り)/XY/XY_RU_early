@@ -165,7 +165,7 @@ for i in 1:1:Ave
     end
 end
 TimeMax = maximum(TimeArray)
-T = 30#Int(round(TimeMax) + 1)
+T = 50#Int(round(TimeMax) + 1)
 TimeArray[:,:]
 size(TimeArray)
 out = open("ハミルトニアン(-有り)/XY/time_RU_early.txt","a")
@@ -191,9 +191,9 @@ function main()
     for β in β_list
         ρ = exp(-1*β*H)/tr(exp(-β*H))
         for B_index in B_list
-            out = open("ハミルトニアン(-有り)/XY/パウリ(Z,X)/計算結果/XY_β=$β(1,$B_index)_RU_early.txt","a")
+            out = open("ハミルトニアン(-有り)/XY/パウリ(Z,Z)/計算結果/XY_β=$β(1,$B_index)_RU_early.txt","a")
             
-            B = make_pauli(B_index,Nq,"X")
+            B = make_pauli(B_index,Nq,"Z")
             println("β=",β,',',"A=1",',',"B=",B_index)
             result = zeros(ComplexF64,Ave,T+1)
             result_ave = zeros(ComplexF64,T+1)
@@ -234,7 +234,7 @@ main()
 #-------------------------------------------------------------------------------------------------------------------
 #RUを追加する時
 #dataをロード,filenameに注意
-filename = "ハミルトニアン(-有り)/XY/data1.jld2"
+filename = "ハミルトニアン(-有り)/XY/RU_early.jld2"
 data = load(filename)
 N = data["N"]
 TimeArray = data["Time"]
