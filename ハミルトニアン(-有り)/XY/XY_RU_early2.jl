@@ -96,17 +96,17 @@ function make_pauli(index::Int, Nq::Int, pauli_name)
 end
 
 function make_unitary_pool(Nq::Int,S,N,Ave)
-    unitary_pool = zeros(ComplexF64,Ave,N,2^Nq,2^Nq)
+    unitary_pool = zeros(ComplexF64,2^Nq,2^Nq,N,Ave)
     for k in 1:Ave
         println(S[k,:])
-        for i in 1:length(S[k,:])#N
+        for i in 1:N#N
             hamiltonian_unitary = H_vec*diagm(exp.(-1.0im*H_val*S[k,i]))*H_vec'
             #hamiltonian_unitary = exp(-1.0im*H*S[i])
             if i == 1
-                unitary_pool[k,i,:,:] = hamiltonian_unitary
+                unitary_pool[:,:,i,k] = hamiltonian_unitary
             else
                 RU = RandomUnitaryMatrix(Nq,4)
-                unitary_pool[k,i,:,:] = unitary_pool[k,i-1,:,:]*RU*hamiltonian_unitary
+                unitary_pool[:,:,i,k] = unitary_pool[:,:,i-1,k]*RU*hamiltonian_unitary
             end 
         end
     end
@@ -168,11 +168,20 @@ for i in 1:1:Ave
 end
 TimeMax = maximum(TimeArray)
 T = 50#Int(round(TimeMax) + 1)
-TimeArray[1,:]
+TimeArray[:,:]
 size(TimeArray)
 
 
 @time unitary_pool = make_unitary_pool(Nq,TimeArray,N,Ave)
+unitary_pool[:,:,:,1]
+U_t = zeros(ComplexF64,2^Nq,2^Nq,T+1,Ave)
+size(U_t)
+@time for i in 1:1:Ave
+    for t in 0:1:T
+        println(i,t)
+        U_t[:,:,t+1,i] = chose_unitary(unitary_pool[:,:,:,i],TimeArray[i,:],t)
+    end
+end
 
 out = open("ハミルトニアン(-有り)/XY/time_RU_early.txt","a")
 println(out,TimeArray)
@@ -187,19 +196,20 @@ end
 close(out)
 
 #乱数が入るタイミングなどのdataを保存
-filename = "ハミルトニアン(-有り)/XY/RU_early.jld2"
+filename = "ハミルトニアン(-有り)/XY/test.jld2"
 jldopen(filename,"w") do file
     file["N"] = N
     file["Time"] = TimeArray
+    file["unitary"] = unitary_pool
 end
 
 function main()
     for β in β_list
         ρ = exp(-1*β*H)/tr(exp(-β*H))
         for B_index in B_list
-            out = open("ハミルトニアン(-有り)/XY/パウリ(Z,Z)/計算結果/XY_β=$β(1,$B_index)_RU_early.txt","a")
+            out = open("XY_β=$β(1,$B_index)_RU_early.txt","a")
             
-            B = make_pauli(B_index,Nq,"Z")
+            B = make_pauli(B_index,Nq,"X")
             println("β=",β,',',"A=1",',',"B=",B_index)
             result = zeros(ComplexF64,Ave,T+1)
             result_ave = zeros(ComplexF64,T+1)
@@ -207,11 +217,12 @@ function main()
             for i in 1:1:Ave #平均を取る回数
                 println(TimeArray[i,:])
                 println(out,TimeArray[i,:])
-                unitary_pool = make_unitary_pool(Nq,TimeArray[i,:],N)
+                #unitary_pool = make_unitary_pool(Nq,TimeArray[i,:],N)
                 
                 for t in 0:1:T
                     println(t)
-                    U = chose_unitary(unitary_pool,TimeArray[i,:],t)
+                    #U = chose_unitary(unitary_pool[:,:,:,i],TimeArray[i,:],t)
+                    U = U_t[:,:,t+1,i]
                     OTOC = tr(ρ*U'*B'*U*A'*U'*B*U*A)
                     #println(out,OTOC)
                     println(OTOC)
@@ -236,7 +247,7 @@ function main()
     end
 end
 
-main()
+@time main()
 #-------------------------------------------------------------------------------------------------------------------
 #RUを追加する時
 #dataをロード,filenameに注意
