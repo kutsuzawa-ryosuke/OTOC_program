@@ -95,18 +95,20 @@ function make_pauli(index::Int, Nq::Int, pauli_name)
     return pauli
 end
 
-function make_unitary_pool(Nq::Int,S,N)
-    unitary_pool = zeros(ComplexF64,2^Nq,2^Nq,N)
-
-    for i in 1:length(S)#N
-        hamiltonian_unitary = H_vec*diagm(exp.(-1.0im*H_val*S[i]))*H_vec'
-        #hamiltonian_unitary = exp(-1.0im*H*S[i])
-        if i == 1
-            unitary_pool[:,:,i] = hamiltonian_unitary
-        else
-            RU = RandomUnitaryMatrix(Nq,4)
-            unitary_pool[:,:,i] = unitary_pool[:,:,i-1]*RU*hamiltonian_unitary
-        end 
+function make_unitary_pool(Nq::Int,S,N,Ave)
+    unitary_pool = zeros(ComplexF64,Ave,N,2^Nq,2^Nq)
+    for k in 1:Ave
+        println(S[k,:])
+        for i in 1:length(S[k,:])#N
+            hamiltonian_unitary = H_vec*diagm(exp.(-1.0im*H_val*S[k,i]))*H_vec'
+            #hamiltonian_unitary = exp(-1.0im*H*S[i])
+            if i == 1
+                unitary_pool[k,i,:,:] = hamiltonian_unitary
+            else
+                RU = RandomUnitaryMatrix(Nq,4)
+                unitary_pool[k,i,:,:] = unitary_pool[k,i-1,:,:]*RU*hamiltonian_unitary
+            end 
+        end
     end
     return unitary_pool
 end
@@ -166,8 +168,12 @@ for i in 1:1:Ave
 end
 TimeMax = maximum(TimeArray)
 T = 50#Int(round(TimeMax) + 1)
-TimeArray[:,:]
+TimeArray[1,:]
 size(TimeArray)
+
+
+@time unitary_pool = make_unitary_pool(Nq,TimeArray,N,Ave)
+
 out = open("ハミルトニアン(-有り)/XY/time_RU_early.txt","a")
 println(out,TimeArray)
 println(out,"")
