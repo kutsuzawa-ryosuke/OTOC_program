@@ -140,13 +140,13 @@ end
 
 
 Nq = 10 #qubit数
-N = 50  #乱数取る回数
+N = 400  #乱数取る回数
 Ave = 10 #平均を取る回数
 #β = 0  #最大10くらい
 H = make_hamiltonian(Nq)
 H_val, H_vec = eigen(H) 
 #ρ = exp(-1*β*H)/tr(exp(-β*H)) 
-A = make_pauli(1,Nq,"X")
+A = make_pauli(1,Nq,"Z")
 #B = make_pauli(5,Nq,"X")
 β_list = [0,1,3,5]
 B_list = [2,3,4,5,6,7,8,9,10]
@@ -184,7 +184,7 @@ size(U_t)
 end
 U_t
 
-out = open("ハミルトニアン(-有り)/XY/time_RU_early.txt","a")
+out = open("ハミルトニアン(-有り)/XY/time_RU_early_long.txt","a")
 println(out,TimeArray)
 println(out,"")
 for i in 1:1:Ave
@@ -208,9 +208,9 @@ function main()
     for β in β_list
         ρ = exp(-1*β*H)/tr(exp(-β*H))
         for B_index in B_list
-            out = open("ハミルトニアン(-有り)/XY/パウリ(X,Y)_RU_early/計算結果/XY_β=$β(1,$B_index)_RU_early.txt","a")
+            out = open("ハミルトニアン(-有り)/XY/パウリ(Z,X)_RU_early_long/計算結果/XY_β=$β(1,$B_index)_RU_early.txt","a")
             
-            B = make_pauli(B_index,Nq,"Y")
+            B = make_pauli(B_index,Nq,"X")
             println("β=",β,',',"A=1",',',"B=",B_index)
             result = zeros(ComplexF64,Ave,T+1)
             result_ave = zeros(ComplexF64,T+1)
@@ -222,8 +222,8 @@ function main()
                 
                 for t in 0:1:T
                     println(t)
-                    #U = chose_unitary(unitary_pool[:,:,:,i],TimeArray[i,:],t)
-                    U = U_t[:,:,t+1,i]
+                    U = chose_unitary(unitary_pool[:,:,:,i],TimeArray[i,:],t)
+                    #U = U_t[:,:,t+1,i]
                     OTOC = tr(ρ*U'*B'*U*A'*U'*B*U*A)
                     #println(out,OTOC)
                     println(OTOC)
