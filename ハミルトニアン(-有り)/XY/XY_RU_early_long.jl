@@ -197,11 +197,11 @@ end
 close(out)
 
 #乱数が入るタイミングなどのdataを保存
-filename = "ハミルトニアン(-有り)/XY/test.jld2"
+filename = "ハミルトニアン(-有り)/XY/RU_early_long.jld2"
 jldopen(filename,"w") do file
     file["N"] = N
     file["Time"] = TimeArray
-    file["unitary"] = unitary_pool
+    #file["unitary"] = unitary_pool
 end
 
 function main()
