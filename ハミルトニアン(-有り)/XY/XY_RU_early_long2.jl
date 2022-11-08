@@ -95,20 +95,18 @@ function make_pauli(index::Int, Nq::Int, pauli_name)
     return pauli
 end
 
-function make_unitary_pool(Nq::Int,S,N,Ave)
-    unitary_pool = zeros(ComplexF64,2^Nq,2^Nq,N,Ave)
-    for k in 1:Ave
-        println(S[k,:])
-        for i in 1:N#N
-            hamiltonian_unitary = H_vec*diagm(exp.(-1.0im*H_val*S[k,i]))*H_vec'
-            #hamiltonian_unitary = exp(-1.0im*H*S[i])
-            if i == 1
-                unitary_pool[:,:,i,k] = hamiltonian_unitary
-            else
-                RU = RandomUnitaryMatrix(Nq,4)
-                unitary_pool[:,:,i,k] = unitary_pool[:,:,i-1,k]*RU*hamiltonian_unitary
-            end 
-        end
+function make_unitary_pool(Nq::Int,S,N)
+    unitary_pool = zeros(ComplexF64,2^Nq,2^Nq,N)
+
+    for i in 1:N
+        hamiltonian_unitary = H_vec*diagm(exp.(-1.0im*H_val*S[i]))*H_vec'
+        #hamiltonian_unitary = exp(-1.0im*H*S[i])
+        if i == 1
+            unitary_pool[:,:,i] = hamiltonian_unitary
+        else
+            RU = RandomUnitaryMatrix(Nq,4)
+            unitary_pool[:,:,i] = unitary_pool[:,:,i-1]*RU*hamiltonian_unitary
+        end 
     end
     return unitary_pool
 end
@@ -146,7 +144,7 @@ Ave = 10 #平均を取る回数
 H = make_hamiltonian(Nq)
 H_val, H_vec = eigen(H) 
 #ρ = exp(-1*β*H)/tr(exp(-β*H)) 
-A = make_pauli(1,Nq,"Z")
+#A = make_pauli(1,Nq,"Z")
 #B = make_pauli(5,Nq,"X")
 β_list = [0,1,3,5]
 B_list = [2,3,4,5,6,7,8,9,10]
@@ -167,22 +165,9 @@ for i in 1:1:Ave
     end
 end
 TimeMax = maximum(TimeArray)
-T = 50#Int(round(TimeMax) + 1)
+T = 10#Int(round(TimeMax) + 1)
 TimeArray[:,:]
 size(TimeArray)
-
-
-@time unitary_pool = make_unitary_pool(Nq,TimeArray,N,Ave)
-unitary_pool[:,:,:,1]
-U_t = zeros(ComplexF64,2^Nq,2^Nq,T+1,Ave)
-size(U_t)
-@time for i in 1:1:Ave
-    for t in 0:1:T
-        println(i,t)
-        U_t[:,:,t+1,i] = chose_unitary(unitary_pool[:,:,:,i],TimeArray[i,:],t)
-    end
-end
-U_t
 
 out = open("ハミルトニアン(-有り)/XY/time_RU_early_long.txt","a")
 println(out,TimeArray)
@@ -197,49 +182,60 @@ end
 close(out)
 
 #乱数が入るタイミングなどのdataを保存
-filename = "ハミルトニアン(-有り)/XY/test.jld2"
+filename = "ハミルトニアン(-有り)/XY/RU_early_long.jld2"
 jldopen(filename,"w") do file
     file["N"] = N
     file["Time"] = TimeArray
-    file["unitary"] = unitary_pool
+    #file["unitary"] = unitary_pool
 end
 
-function main()
-    for β in β_list
-        ρ = exp(-1*β*H)/tr(exp(-β*H))
-        for B_index in B_list
-            out = open("ハミルトニアン(-有り)/XY/パウリ(Z,X)_RU_early_long/計算結果/XY_β=$β(1,$B_index)_RU_early.txt","a")
-            
-            B = make_pauli(B_index,Nq,"X")
-            println("β=",β,',',"A=1",',',"B=",B_index)
-            result = zeros(ComplexF64,Ave,T+1)
-            result_ave = zeros(ComplexF64,T+1)
+function main(P_A::String,P_B::String)
+    A = make_pauli(1,Nq,P_A)
 
-            for i in 1:1:Ave #平均を取る回数
+    result_ave = zeros(ComplexF64,length(β_list),length(B_list),T+1)
+    @time for i in 1:1:Ave #平均を取る回数
+        @time unitary_pool = make_unitary_pool(Nq,TimeArray[i,:],N)
+        U_t = zeros(ComplexF64,2^Nq,2^Nq,T+1)
+        @time for t in 0:1:T
+            println(t)
+            U_t[:,:,t+1] = chose_unitary(unitary_pool,TimeArray[i,:],t)
+        end
+
+        for j in 1:1:length(β_list)
+            β = β_list[j]
+            ρ = exp(-1*β*H)/tr(exp(-β*H))
+
+            for k in 1:1:length(B_list)
+                B_index = B_list[k]
+                B = make_pauli(B_index,Nq,P_B)
+                out = open("ハミルトニアン(-有り)/XY/パウリ($P_A,$P_B)_RU_early_long/計算結果/XY_β=$β(1,$B_index)_RU_early_long.txt","a")
+                println("β=",β,',',"A=1",',',"B=",B_index)
                 println(TimeArray[i,:])
                 println(out,TimeArray[i,:])
-                #unitary_pool = make_unitary_pool(Nq,TimeArray[i,:],N)
-                
+
                 for t in 0:1:T
-                    println(t)
-                    U = chose_unitary(unitary_pool[:,:,:,i],TimeArray[i,:],t)
-                    #U = U_t[:,:,t+1,i]
+                    #U = chose_unitary(unitary_pool[:,:,:,i],TimeArray[i,:],t)
+                    U = U_t[:,:,t+1]
                     OTOC = tr(ρ*U'*B'*U*A'*U'*B*U*A)
-                    #println(out,OTOC)
+                    println(t)
                     println(OTOC)
-                    result[i,t+1] = OTOC
-                end
-                
-                for j in 1:1:T+1
-                    println(out,result[i,j])
-                    result_ave[j] += result[i,j]
+                    println(out,OTOC)
+                    result_ave[j,k,t+1] += OTOC
                 end
                 println(out,"")
+                close(out)
             end
+        end
+    end
+    result_ave = result_ave ./ Ave
+    for j in 1:1:length(β_list)
+        β = β_list[j]
+        for k in 1:1:length(B_list)
+            B_index = B_list[k]
+            out = open("ハミルトニアン(-有り)/XY/パウリ($P_A,$P_B)_RU_early_long/計算結果/XY_β=$β(1,$B_index)_RU_early_long.txt","a")
             println(out,"average")
-            result_ave = result_ave ./ Ave
-            for j in 1:1:T+1
-                println(out,result_ave[j])
+            for l in 1:1:T+1
+                println(out,result_ave[j,k,l])
             end
             println(out,"")
             println(out, "最後にRUが入ったタイミング: ",TimeMax)
@@ -247,12 +243,15 @@ function main()
         end
     end
 end
+@time main("Z","X")
+@time main("X","Y")
+@time main("Z","Z")
+@time main("X","X")
 
-@time main()
 #-------------------------------------------------------------------------------------------------------------------
 #RUを追加する時
 #dataをロード,filenameに注意
-filename = "ハミルトニアン(-有り)/XY/RU_early.jld2"
+filename = "ハミルトニアン(-有り)/XY/RU_early_long.jld2"
 data = load(filename)
 N = data["N"]
 TimeArray = data["Time"]
