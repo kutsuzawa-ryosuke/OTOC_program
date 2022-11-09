@@ -165,7 +165,7 @@ for i in 1:1:Ave
     end
 end
 TimeMax = maximum(TimeArray)
-T = 10#Int(round(TimeMax) + 1)
+T = 50#Int(round(TimeMax) + 1)
 TimeArray[:,:]
 size(TimeArray)
 
