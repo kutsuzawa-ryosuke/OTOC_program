@@ -147,7 +147,7 @@ end
 
 #変数の定義
 Nq = 10 #qubit数
-N = 50  #RU取る回数
+N = 400  #RU取る回数
 Ave = 10 #平均を取る回数
 #β = 0  #最大10くらい
 H = make_hamiltonian(Nq)
@@ -180,7 +180,7 @@ T = 50#Int(round(TimeMax) + 1)
 TimeArray[:,:]
 size(TimeArray)
 
-out = open("ハミルトニアン(-有り)/横イジング/time_RU_early.txt","a")
+out = open("ハミルトニアン(-有り)/横イジング/time_RU_early_long.txt","a")
 println(out,TimeArray)
 println(out,"")
 for i in 1:1:Ave
@@ -220,7 +220,7 @@ function main(P_A::String,P_B::String)
             for k in 1:1:length(B_list)
                 B_index = B_list[k]
                 B = make_pauli(B_index,Nq,P_B)
-                out = open("ハミルトニアン(-有り)/横イジング/パウリ($P_A,$P_B)_RU_early/計算結果/XY_β=$β(1,$B_index)_RU_early.txt","a")
+                out = open("ハミルトニアン(-有り)/横イジング/パウリ($P_A,$P_B)_RU_early_long/計算結果/XY_β=$β(1,$B_index)_RU_early_long.txt","a")
                 println("β=",β,',',"A=1",',',"B=",B_index)
                 println(TimeArray[i,:])
                 println(out,TimeArray[i,:])
@@ -244,7 +244,7 @@ function main(P_A::String,P_B::String)
         β = β_list[j]
         for k in 1:1:length(B_list)
             B_index = B_list[k]
-            out = open("ハミルトニアン(-有り)/横イジング/パウリ($P_A,$P_B)_RU_early/計算結果/XY_β=$β(1,$B_index)_RU_early.txt","a")
+            out = open("ハミルトニアン(-有り)/横イジング/パウリ($P_A,$P_B)_RU_early_long/計算結果/XY_β=$β(1,$B_index)_RU_early_long.txt","a")
             println(out,"average")
             for l in 1:1:T+1
                 println(out,result_ave[j,k,l])
@@ -255,7 +255,7 @@ function main(P_A::String,P_B::String)
         end
     end
 end
-#@time main("Z","X")
+@time main("Z","X")
 @time main("X","Y")
 @time main("Z","Z")
 @time main("X","X")
@@ -263,7 +263,7 @@ end
 #-------------------------------------------------------------------------------------------------------------------
 #RUを追加する時
 #dataをロード,filenameに注意
-filename = "ハミルトニアン(-有り)/横イジング/RU_early.jld2"
+filename = "ハミルトニアン(-有り)/横イジング/RU_early_long.jld2"
 data = load(filename)
 N = data["N"]
 TimeArray = data["Time"]
