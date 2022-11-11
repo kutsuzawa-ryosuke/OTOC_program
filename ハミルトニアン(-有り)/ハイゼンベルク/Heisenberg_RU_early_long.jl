@@ -106,13 +106,13 @@ end
 function make_unitary_pool(Nq::Int,S,N)
     unitary_pool = zeros(ComplexF64,2^Nq,2^Nq,N)
 
-    for i in 1:N
+    for i in 1:N #N
         hamiltonian_unitary = H_vec*diagm(exp.(-1.0im*H_val*S[i]))*H_vec'
         #hamiltonian_unitary = exp(-1.0im*H*S[i])
         if i == 1
             unitary_pool[:,:,i] = hamiltonian_unitary
         else
-            RU = RandomUnitaryMatrix(Nq,4)
+            RU = RandomUnitaryMatrix(Nq,2)
             unitary_pool[:,:,i] = unitary_pool[:,:,i-1]*RU*hamiltonian_unitary
         end 
     end
