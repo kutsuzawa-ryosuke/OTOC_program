@@ -107,7 +107,7 @@ end
 function make_unitary_pool(Nq::Int,S,θ,ϕ,N)
     unitary_pool = zeros(ComplexF64,2^Nq,2^Nq,N)
 
-    for i in 1:length(S)
+    for i in 1:N
         hamiltonian_unitary = H_vec*diagm(exp.(-1.0im*H_val*S[i]))*H_vec'
         #hamiltonian_unitary = exp(-1.0im*H*S[i])
         if i == 1
@@ -153,7 +153,7 @@ Ave = 10 #平均を取る回数
 H = make_hamiltonian(Nq)
 H_val, H_vec = eigen(H) 
 #ρ = exp(-1*β*H)/tr(exp(-β*H)) 
-A = make_pauli(1,Nq,"Z")
+A = make_pauli(1,Nq,"X")
 #B = make_pauli(5,Nq,"X")
 β_list = [0,1,3,5]
 B_list = [2,3,4,5,6,7,8,9,10]
@@ -205,9 +205,9 @@ function main()
     for β in β_list
         ρ = exp(-1*β*H)/tr(exp(-β*H))
         for B_index in B_list
-            out = open("ハミルトニアン(-有り)/横イジング/パウリ(Z,Z)/計算結果/Ising_β=$β(1,$B_index).txt","a")
+            out = open("ハミルトニアン(-有り)/横イジング/パウリ(X,X)/計算結果/Ising_β=$β(1,$B_index).txt","a")
             
-            B = make_pauli(B_index,Nq,"Z")
+            B = make_pauli(B_index,Nq,"X")
             println("β=",β,',',"A=1",',',"B=",B_index)
             result = zeros(ComplexF64,Ave,T+1)
             result_ave = zeros(ComplexF64,T+1)
@@ -244,7 +244,7 @@ function main()
     end
 end
 
-main()
+@time main()
 #-------------------------------------------------------------------------------------------------------------------
 #RUを追加する時
 #dataをロード,filenameに注意
