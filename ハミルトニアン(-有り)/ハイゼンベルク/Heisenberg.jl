@@ -197,9 +197,9 @@ function main()
     for β in β_list
         ρ = exp(-1*β*H)/tr(exp(-β*H))
         for B_index in B_list
-            out = open("ハミルトニアン(-有り)/ハイゼンベルク/パウリ(X,Y)/計算結果/Heisenberg_β=$β(1,$B_index).txt","a")
+            out = open("ハミルトニアン(-有り)/ハイゼンベルク/パウリ(X,X)/計算結果/Heisenberg_β=$β(1,$B_index).txt","a")
             
-            B = make_pauli(B_index,Nq,"Y")
+            B = make_pauli(B_index,Nq,"X")
             println("β=",β,',',"A=1",',',"B=",B_index)
             result = zeros(ComplexF64,Ave,T+1)
             result_ave = zeros(ComplexF64,T+1)
@@ -236,7 +236,7 @@ function main()
     end
 end
 
-main()
+@time main()
 #-------------------------------------------------------------------------------------------------------------------
 #RUを追加する時
 #dataをロード,filenameに注意
