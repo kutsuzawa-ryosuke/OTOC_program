@@ -1,5 +1,4 @@
 using LinearAlgebra, Random, RandomMatrices
-using Plots
 
 Igate = Matrix{ComplexF64}(I,2,2) #1-qubitの単位行列
 Xgate = [0.0+0.0im 1.0+0.0im;1.0+0.0im 0.0+0.0im] #1-qubitのパウリX行列

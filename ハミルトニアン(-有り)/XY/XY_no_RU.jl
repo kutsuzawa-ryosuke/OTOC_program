@@ -1,5 +1,9 @@
 using LinearAlgebra, Random, RandomMatrices
-using Plots
+
+Igate = Matrix{ComplexF64}(I,2,2)                  #1-qubitの単位行列
+Xgate = [0.0+0.0im 1.0+0.0im;1.0+0.0im 0.0+0.0im]  #1-qubitのパウリX行列
+Ygate = [0.0+0.0im 0.0-1.0im;0.0+1.0im 0.0+0.0im]  #1-qubitのパウリY行列
+Zgate = [1.0+0.0im 0.0+0.0im;0.0+0.0im -1.0+0.0im] #1-qubitのパウリY行列
 
 function make_hamiltonian(Nq::Int)#XYモデル
     XX = zeros(ComplexF64,(2^Nq,2^Nq))
@@ -82,10 +86,7 @@ function make_pauli(index::Int, Nq::Int, pauli_name)
     return pauli
 end
 
-Igate = Matrix{ComplexF64}(I,2,2)                  #1-qubitの単位行列
-Xgate = [0.0+0.0im 1.0+0.0im;1.0+0.0im 0.0+0.0im]  #1-qubitのパウリX行列
-Ygate = [0.0+0.0im 0.0-1.0im;0.0+1.0im 0.0+0.0im]  #1-qubitのパウリY行列
-Zgate = [1.0+0.0im 0.0+0.0im;0.0+0.0im -1.0+0.0im] #1-qubitのパウリY行列
+
 
 Nq = 10 #qubit数
 
