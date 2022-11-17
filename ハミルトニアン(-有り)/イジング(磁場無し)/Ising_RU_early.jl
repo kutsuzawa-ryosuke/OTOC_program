@@ -1,29 +1,34 @@
 using LinearAlgebra, Random, RandomMatrices
 using JLD2
 using FileIO
-#using Plots
 
 Igate = Matrix{ComplexF64}(I,2,2)                  #1-qubitの単位行列
 Xgate = [0.0+0.0im 1.0+0.0im;1.0+0.0im 0.0+0.0im]  #1-qubitのパウリX行列
 Ygate = [0.0+0.0im 0.0-1.0im;0.0+1.0im 0.0+0.0im]  #1-qubitのパウリY行列
 Zgate = [1.0+0.0im 0.0+0.0im;0.0+0.0im -1.0+0.0im] #1-qubitのパウリY行列
 
-function RandomUnitaryMatrix(Nq,theta1,theta2)
-    I_gate = Matrix{ComplexF64}(I,2^(Nq-2),2^(Nq-2))
-    X1 = [cos(theta1) -im*sin(theta1)
-        -im*sin(theta1) cos(theta1)]
-    X2 = [cos(theta2) -im*sin(theta2)
-        -im*sin(theta2) cos(theta2)]
-    RU = kron(X1,X2)
-    RU = kron(RU,I_gate)
+function RandomUnitaryMatrix(Nq::Int,Dim::Int)
+    x = (randn(Dim,Dim) + randn(Dim,Dim)*im)/ sqrt(2)
+    f = qr(x)
+    diagR = sign.(real(diag(f.R)))
+    diagR[diagR.==0] .= 1
+    diagRm = diagm(diagR)
+    RU = f.Q * diagRm
+    for i in 2:1:Nq
+        x = (randn(Dim,Dim) + randn(Dim,Dim)*im)/ sqrt(2)
+        f = qr(x)
+        diagR = sign.(real(diag(f.R)))
+        diagR[diagR.==0] .= 1
+        diagRm = diagm(diagR)
+        RUi = f.Q * diagRm
+        RU = kron(RU,RUi)
+    end
     return RU
 end
 
-function make_hamiltonian(Nq::Int)
+function make_hamiltonian(Nq::Int) #磁場無しイジング
     XX = zeros(ComplexF64,(2^Nq,2^Nq))
-    Zn = zeros(ComplexF64,(2^Nq,2^Nq))
     hamiX = zeros(ComplexF64,(2,2))
-    hamiZ = zeros(ComplexF64,(2,2))
 
     for k in 1:Nq-1
         for l in 1:Nq
@@ -46,26 +51,7 @@ function make_hamiltonian(Nq::Int)
         XX = XX + hamiX
     end
 
-    for q in 1:Nq
-        for r in 1:Nq
-            if q == r
-                if r == 1
-                    hamiZ = Zgate
-                else
-                    hamiZ = kron(hamiZ,Zgate)
-                end
-            else
-                if r == 1
-                    hamiZ = Igate
-                else
-                    hamiZ = kron(hamiZ,Igate)
-                    
-                end 
-            end
-        end
-        Zn = Zn + hamiZ
-    end
-    hamiltonian = (-1)*(XX + Zn)
+    hamiltonian = (-1)*(XX)
     return hamiltonian
 end
 
@@ -104,16 +90,16 @@ function make_pauli(index::Int, Nq::Int, pauli_name)
     return pauli
 end
 
-function make_unitary_pool(Nq::Int,S,θ,ϕ,N)
+function make_unitary_pool(Nq::Int,S,N)
     unitary_pool = zeros(ComplexF64,2^Nq,2^Nq,N)
 
-    for i in 1:N
+    for i in 1:N #N
         hamiltonian_unitary = H_vec*diagm(exp.(-1.0im*H_val*S[i]))*H_vec'
         #hamiltonian_unitary = exp(-1.0im*H*S[i])
         if i == 1
             unitary_pool[:,:,i] = hamiltonian_unitary
         else
-            RU = RandomUnitaryMatrix(Nq,θ[i-1],ϕ[i-1])
+            RU = RandomUnitaryMatrix(Nq,2)
             unitary_pool[:,:,i] = unitary_pool[:,:,i-1]*RU*hamiltonian_unitary
         end 
     end
@@ -161,13 +147,9 @@ B_list = [2,3,4,5,6,7,8,9,10]
 #-------------------------------------------------------------------------------------------------------------------
 #普通に実行する時
 TimeArray = zeros(Float64,Ave,N)
-θ = zeros(Float64,Ave,N)
-ϕ = zeros(Float64,Ave,N)
 for i in 1:1:Ave
     for j in 1:N
         s = rand()/10
-        θ[i,j] = rand()*2*pi
-        ϕ[i,j] = rand()*2*pi
         if j == 1
             TimeArray[i,j] = s
         else
@@ -180,7 +162,7 @@ T = 50#Int(round(TimeMax) + 1)
 TimeArray[:,:]
 size(TimeArray)
 
-out = open("ハミルトニアン(-有り)/横イジング/time_RU_early.txt","a")
+out = open("ハミルトニアン(-有り)/イジング(磁場無し)/time_RU_early.txt","a")
 println(out,TimeArray)
 println(out,"")
 for i in 1:1:Ave
@@ -197,8 +179,6 @@ filename = "ハミルトニアン(-有り)/横イジング/RU_early.jld2"
 jldopen(filename,"w") do file
     file["N"] = N
     file["Time"] = TimeArray
-    file["θ"] = θ
-    file["ϕ"] = ϕ
 end
 
 function main(P_A::String,P_B::String)
@@ -206,7 +186,7 @@ function main(P_A::String,P_B::String)
 
     result_ave = zeros(ComplexF64,length(β_list),length(B_list),T+1)
     @time for i in 1:1:Ave #平均を取る回数
-        @time unitary_pool = make_unitary_pool(Nq,TimeArray[i,:],θ[i,:],ϕ[i,:],N)
+        @time unitary_pool = make_unitary_pool(Nq,TimeArray[i,:],N)
         U_t = zeros(ComplexF64,2^Nq,2^Nq,T+1)
         @time for t in 0:1:T
             println(t)
@@ -220,7 +200,7 @@ function main(P_A::String,P_B::String)
             for k in 1:1:length(B_list)
                 B_index = B_list[k]
                 B = make_pauli(B_index,Nq,P_B)
-                out = open("ハミルトニアン(-有り)/横イジング/パウリ($P_A,$P_B)_RU_early/計算結果/XY_β=$β(1,$B_index)_RU_early.txt","a")
+                out = open("ハミルトニアン(-有り)/イジング(磁場無し)/パウリ($P_A,$P_B)_RU_early/計算結果/Ising_β=$β(1,$B_index)_RU_early.txt","a")
                 println("β=",β,',',"A=1",',',"B=",B_index)
                 println(TimeArray[i,:])
                 println(out,TimeArray[i,:])
@@ -244,18 +224,19 @@ function main(P_A::String,P_B::String)
         β = β_list[j]
         for k in 1:1:length(B_list)
             B_index = B_list[k]
-            out = open("ハミルトニアン(-有り)/横イジング/パウリ($P_A,$P_B)_RU_early/計算結果/XY_β=$β(1,$B_index)_RU_early.txt","a")
+            out = open("ハミルトニアン(-有り)/イジング(磁場無し)/パウリ($P_A,$P_B)_RU_early/計算結果/Ising_β=$β(1,$B_index)_RU_early.txt","a")
             println(out,"average")
+            println(out, "最後にRUが入ったタイミング: ",TimeMax)
             for l in 1:1:T+1
                 println(out,result_ave[j,k,l])
             end
-            println(out,"")
-            println(out, "最後にRUが入ったタイミング: ",TimeMax)
+            println(out,"")        
             close(out)
         end
     end
 end
-#@time main("Z","X")
+
+@time main("Z","X")
 @time main("X","Y")
 @time main("Z","Z")
 @time main("X","X")
@@ -263,30 +244,22 @@ end
 #-------------------------------------------------------------------------------------------------------------------
 #RUを追加する時
 #dataをロード,filenameに注意
-filename = "ハミルトニアン(-有り)/横イジング/RU_early.jld2"
+filename = "ハミルトニアン(-有り)/イジング(磁場無し)/RU_early.jld2"
 data = load(filename)
 N = data["N"]
 TimeArray = data["Time"]
-θ = data["θ"] 
-ϕ = data["ϕ"]
 
 N_ADD = N + 10 #増やすRUの数
 T_Old = 100 #前回のTimeMax
 
 TimeAddArray = zeros(Float64,Ave,N_ADD)
-θ_Add = zeros(Float64,Ave,N_ADD)
-ϕ_Add = zeros(Float64,Ave,N_ADD)
 for i in 1:1:Ave
     for j in 1:N
         TimeAddArray[i,j] = TimeArray[i,j]
-        θ_Add[i,j] = θ[i,j]
-        ϕ_Add[i,j] = ϕ[i,j]
     end
     for j in N+1:N_ADD
         s = rand()*10
         TimeAddArray[i,j] = TimeAddArray[i,j-1]+s
-        θ_Add[i,j] = rand()*2*pi
-        ϕ_Add[i,j] = rand()*2*pi
     end
 end
 
@@ -319,7 +292,7 @@ function main_Add()
             for i in 1:1:Ave
                 println(TimeAddArray[i,:])
                 println(out,TimeAddArray[i,:])
-                unitary_pool = make_unitary_pool(Nq,TimeAddArray[i,:],θ_Add[i,:],ϕ_Add[i,:],N_ADD)
+                unitary_pool = make_unitary_pool(Nq,TimeAddArray[i,:],N_ADD)
                 k = 1
                 for t in T_Old+1:1:T_New
                     println(t)
@@ -351,7 +324,7 @@ end
 
 main_Add()
 
-filename2 = "ハミルトニアン(-有り)/横イジング/RU_early2.jld2"
+filename2 = "ハミルトニアン(-有り)/イジング(磁場無し)/RU_early2.jld2"
 jldopen(filename2,"w") do file
     file["N"] = N_ADD
     file["Time"] = TimeAddArray
