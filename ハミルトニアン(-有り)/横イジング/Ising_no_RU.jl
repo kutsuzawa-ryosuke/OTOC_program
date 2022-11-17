@@ -1,6 +1,11 @@
 using LinearAlgebra, Random, RandomMatrices
 using Plots
 
+Igate = Matrix{ComplexF64}(I,2,2) #1-qubitの単位行列
+Xgate = [0.0+0.0im 1.0+0.0im;1.0+0.0im 0.0+0.0im] #1-qubitのパウリX行列
+Ygate = [0.0+0.0im 0.0-1.0im;0.0+1.0im 0.0+0.0im] ##1-qubitのパウリY行列
+Zgate = [1.0+0.0im 0.0+0.0im;0.0+0.0im -1.0+0.0im] #1-qubitのパウリY行列
+
 function make_hamiltonian(Nq::Int) #横磁場イジング
     XX = zeros(ComplexF64,(2^Nq,2^Nq))
     Zn = zeros(ComplexF64,(2^Nq,2^Nq))
@@ -64,6 +69,8 @@ function make_pauli(index::Int, Nq::Int, pauli_name)
             if index == 1 #1st qubitがXかYのとき
                 if pauli_name == "X"
                     pauli = Xgate
+                elseif pauli_name == "Y"
+                    pauli = Ygate
                 elseif pauli_name == "Z"
                     pauli = Zgate
                 else
@@ -77,6 +84,8 @@ function make_pauli(index::Int, Nq::Int, pauli_name)
             if i == index #XかYを代入するタイミングのとき
                 if pauli_name == "X"
                     pauli = kron(pauli, Xgate)
+                elseif pauli_name == "Y"
+                    pauli = kron(pauli, Ygate)
                 elseif pauli_name == "Z"
                     pauli = kron(pauli, Zgate)
                 end
@@ -87,11 +96,6 @@ function make_pauli(index::Int, Nq::Int, pauli_name)
     end
     return pauli
 end
-
-Igate = Matrix{ComplexF64}(I,2,2) #1-qubitの単位行列
-Xgate = [0.0+0.0im 1.0+0.0im;1.0+0.0im 0.0+0.0im] #1-qubitのパウリX行列
-Ygate = [0.0+0.0im 0.0-1.0im;0.0+1.0im 0.0+0.0im] ##1-qubitのパウリY行列
-Zgate = [1.0+0.0im 0.0+0.0im;0.0+0.0im -1.0+0.0im] #1-qubitのパウリY行列
 
 Nq = 10 #qubit数
 
