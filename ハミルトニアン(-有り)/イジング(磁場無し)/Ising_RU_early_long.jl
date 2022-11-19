@@ -175,7 +175,7 @@ end
 close(out)
 
 #乱数が入るタイミングなどのdataを保存
-filename = "ハミルトニアン(-有り)/横イジング/RU_early_long.jld2"
+filename = "ハミルトニアン(-有り)/イジング(磁場無し)/RU_early_long.jld2"
 jldopen(filename,"w") do file
     file["N"] = N
     file["Time"] = TimeArray
