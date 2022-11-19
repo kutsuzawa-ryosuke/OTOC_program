@@ -161,7 +161,7 @@ TimeMax = maximum(TimeArray)
 T = Int(round(TimeMax) + 1)
 TimeArray[:,:]
 size(TimeArray)
-out = open("time.txt","a")
+out = open("ハミルトニアン(-有り)/イジング(磁場無し)/time.txt","a")
 println(out,TimeArray)
 println(out,"")
 for i in 1:1:Ave
