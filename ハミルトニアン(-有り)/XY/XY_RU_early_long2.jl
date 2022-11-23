@@ -232,7 +232,7 @@ function main(P_A::String,P_B::String)
         β = β_list[j]
         for k in 1:1:length(B_list)
             B_index = B_list[k]
-            out = open("ハミルトニアン(-有り)/XY/パウリ($P_A,$P_B)_RU_early_long/計算結果/XY_β=$β(1,$B_index)_RU_early_long.txt","a")
+            out = open("ハミルトニアン(-有り)/XY/パウリ($P_A,$P_B)=(5,-)_RU_early_long/計算結果/XY_β=$β(5,$B_index)_RU_early_long.txt","a")
             println(out,"average")
             for l in 1:1:T+1
                 println(out,result_ave[j,k,l])
