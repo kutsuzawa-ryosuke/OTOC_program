@@ -147,7 +147,7 @@ H_val, H_vec = eigen(H)
 #A = make_pauli(1,Nq,"Z")
 #B = make_pauli(5,Nq,"X")
 β_list = [0,1,3,5]
-B_list = [2,3,4,5,6,7,8,9,10]
+B_list = [1,2,3,4,6,7,8,9,10]
 
 #-------------------------------------------------------------------------------------------------------------------
 #普通に実行する時
@@ -190,7 +190,7 @@ jldopen(filename,"w") do file
 end
 
 function main(P_A::String,P_B::String)
-    A = make_pauli(1,Nq,P_A)
+    A = make_pauli(5,Nq,P_A)
 
     result_ave = zeros(ComplexF64,length(β_list),length(B_list),T+1)
     @time for i in 1:1:Ave #平均を取る回数
@@ -208,8 +208,8 @@ function main(P_A::String,P_B::String)
             for k in 1:1:length(B_list)
                 B_index = B_list[k]
                 B = make_pauli(B_index,Nq,P_B)
-                out = open("ハミルトニアン(-有り)/XY/パウリ($P_A,$P_B)_RU_early_long/計算結果/XY_β=$β(1,$B_index)_RU_early_long.txt","a")
-                println("β=",β,',',"A=1",',',"B=",B_index)
+                out = open("ハミルトニアン(-有り)/XY/パウリ($P_A,$P_B)=(5,-)_RU_early_long/計算結果/XY_β=$β(5,$B_index)_RU_early_long.txt","a")
+                println("β=",β,',',"A=5",',',"B=",B_index)
                 println(TimeArray[i,:])
                 println(out,TimeArray[i,:])
 
